@@ -19,15 +19,14 @@ void manual()
   exit(1);
 }
 
-
 struct ltstr
 {
-  bool operator()(string s1, string s2) const
-  {
-    int mark1 = s1.find("-");
-    int mark2 = s2.find("-");
-    return atoi(s1.substr(0,mark1-1).c_str()) < atoi(s2.substr(0,mark2-1).c_str());
-  }
+    bool operator()(string s1, string s2) const
+    {
+       int mark1 = s1.find("-");
+       int mark2 = s2.find("-");
+       return atoi(s1.substr(0,mark1-1).c_str()) < atoi(s2.substr(0,mark2-1).c_str());
+    }
 };
 
 void read_chrlenggth(const char* chrlen_file)
@@ -65,8 +64,7 @@ void convert_bedgraph_to_bigwig(string bedgraph_file, string chrlength_file, str
 }
 
 void read_feature_file(char* feature_file, const char* ftype, int start)
-{
-    
+{   
     ifstream infile(feature_file);
     if(!infile.is_open())
     {
@@ -74,43 +72,43 @@ void read_feature_file(char* feature_file, const char* ftype, int start)
        exit(1);
     }
 
-    char linee[45000],rec[45000];
+    char line[45000],rec[45000];
+
     while(infile)
     {
-        infile.getline(linee,45000); 
-        strcpy(rec,linee);
+        infile.getline(line,45000); 
+        strcpy(rec,line);
         if(infile)
         {
-           if(rec[0] != '#')
-           {
-               char *pch;
-               pch = strtok(linee,"\t ");
-               vector<const char* > vecc;
-               while(pch != NULL )
-               {
+            if(rec[0] != '#')
+            {
+                char *pch;
+                pch = strtok(line,"\t ");
+                vector<const char* > vecc;
+                while(pch != NULL )
+                {
                    vecc.push_back(pch);
                    pch = strtok(NULL,"\t ");
-               }
+                } 
                
-               chrset.insert(vecc[0]);
+                chrset.insert(vecc[0]);
               
-               if(strcmp(ftype,"gene") == 0)
-               { 
-                  if((strcmp(vecc[2], "gene") == 0))
-	          { 
-                     chrmap.insert(std::pair<string,string>(vecc[0], vecc[start]));
-                  } 
-               } 
-               else 
-               { 
-                   chrmap.insert(std::pair<string,string>(vecc[0], vecc[start]));
-               } 
-           }
+                if(strcmp(ftype,"gene") == 0)
+                { 
+                   if((strcmp(vecc[2], "gene") == 0))
+	           { 
+                      chrmap.insert(std::pair<string,string>(vecc[0], vecc[start]));
+                   } 
+                } 
+                else 
+                { 
+                    chrmap.insert(std::pair<string,string>(vecc[0], vecc[start]));
+                } 
+            }
 	}
     }
     infile.close();
 }
-
 
 void generate_bedgraph(const char* outputfile)
 {
