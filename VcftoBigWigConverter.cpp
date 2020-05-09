@@ -6,6 +6,12 @@
 #include <sstream>
 #include <set>
 
+using namespace std;
+map <string,int> IndexbinMap;
+map<string, string> lenmap;
+std::multimap <string, string> chrmap;
+std::set<string> chrset;
+
 void manual()
 {
   std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~Usage:~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
@@ -13,7 +19,7 @@ void manual()
   exit(1);
 }
 
-using namespace std;
+
 struct ltstr
 {
   bool operator()(string s1, string s2) const
@@ -23,8 +29,6 @@ struct ltstr
     return atoi(s1.substr(0,mark1-1).c_str()) < atoi(s2.substr(0,mark2-1).c_str());
   }
 };
-
-map<string, string > lenmap;
 
 void read_chrlenggth(const char* chrlen_file)
 {
@@ -51,8 +55,8 @@ void read_chrlenggth(const char* chrlen_file)
            lenmap[vec[0]] = vec[1];     
         }
     } 
+    lenfile.close();
 }
-
 
 void convert_bedgraph_to_bigwig(string bedgraph_file, string chrlength_file, string output_file)
 {
@@ -60,32 +64,10 @@ void convert_bedgraph_to_bigwig(string bedgraph_file, string chrlength_file, str
     system(command.c_str()); 
 }
 
-map <string,int,ltstr> IndexbinMap;
-
-int main(int argc, char* argv[])
+void read_feature_file(char* feature_file, const char* ftype, int start)
 {
-    if(argc != 5)
-       manual();
-   
-    read_chrlenggth(argv[1]);
     
-    int start;
-    const char* ftype;
-   
-    if(strcmp(argv[3],"gff") == 0)
-    {
-       start = 3;
-       ftype = "gene";
-    }
-    else if(strcmp(argv[3],"vcf") == 0)
-    {
-       start = 1;
-       ftype = "snp";
-    }
-   
-    std::multimap <string, string> chrmap;
-    std::set<string> chrset;
-    ifstream infile(argv[2]);
+    ifstream infile(feature_file);
     if(!infile.is_open())
     {
        cout<<"could not open the feature file\n";
@@ -126,7 +108,12 @@ int main(int argc, char* argv[])
            }
 	}
     }
+    infile.close();
+}
 
+
+void generate_bedgraph(const char* outputfile)
+{
     std::multimap<string, string>::iterator itmap;
 
     for (std::set<string>::iterator it= chrset.begin(); it!= chrset.end(); ++it)
@@ -186,7 +173,7 @@ int main(int argc, char* argv[])
           
           IndexbinMap.insert(std::pair<string, int>(key, value));
    
-          ofstream outfile(argv[4]);
+          ofstream outfile(outputfile);
   
           for(map<string, int >::iterator ii= IndexbinMap.begin(); ii!= IndexbinMap.end(); ++ii)
               outfile <<chrnum<<"\t"<< (*ii).first << "\t" << IndexbinMap[(*ii).first]<<endl;
@@ -194,7 +181,32 @@ int main(int argc, char* argv[])
 
           outfile.close();
      } 
+}
+
+int main(int argc, char* argv[])
+{
+    if(argc != 5)
+       manual();
    
-     convert_bedgraph_to_bigwig(argv[4] , argv[1], string(argv[2]) + ".bw");
-     return 0;
+    read_chrlenggth(argv[1]);
+    
+    int start;
+    const char* ftype;
+   
+    if(strcmp(argv[3],"gff") == 0)
+    {
+       start = 3;
+       ftype = "gene";
+    }
+    else if(strcmp(argv[3],"vcf") == 0)
+    {
+       start = 1;
+       ftype = "snp";
+    }
+   
+    read_feature_file(argv[2],ftype, start );
+    generate_bedgraph(argv[4]);
+    convert_bedgraph_to_bigwig(argv[4] , argv[1], string(argv[2]) + ".bw");
+
+    return 0;
 }
