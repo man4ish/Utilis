@@ -1,4 +1,6 @@
 # Utilis <br>
+It is very basic code (quick and dirty code) and it needs to be restructured.<br>
+<br><br>
 ## Usage <br>
 <br>
 time ./VcftoBigWigConverter chr.length sample.vcf vcf sample.bedgraph
