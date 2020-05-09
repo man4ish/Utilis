@@ -14,77 +14,80 @@ std::set<string> chrset;
 
 void manual()
 {
-  std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~Usage:~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-  std::cout << "VcftoBigWigConverter <chrlen file> <input file> <file type (gff/vcf)> <outbut file>\n";
-  exit(1);
+     std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Usage:~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+     std::cout << "VcftoBigWigConverter <chrlen file> <input file> <file type (gff/vcf)> <outbut file>\n";
+     exit(1);
 }
 
 struct ltstr
 {
-    bool operator()(string s1, string s2) const
-    {
-       int mark1 = s1.find("-");
-       int mark2 = s2.find("-");
-       return atoi(s1.substr(0,mark1-1).c_str()) < atoi(s2.substr(0,mark2-1).c_str());
-    }
+     bool operator()(string s1, string s2) const
+     {
+         int mark1 = s1.find("-");
+         int mark2 = s2.find("-");
+         return atoi(s1.substr(0,mark1-1).c_str()) < atoi(s2.substr(0,mark2-1).c_str());
+     }
 };
 
 void read_chrlenggth(const char* chrlen_file)
 {
-    ifstream lenfile(chrlen_file);
-    if(!lenfile.is_open())
-    {
-       cout<<"could not open the chrlen file\n";
-       exit(1);
-    }
-    char chrlenline[500];
-    while(lenfile)
-    {  
-        lenfile.getline(chrlenline,500);
-        vector<const char* > vec;
-        char *pch;
-        pch = strtok(chrlenline,"\t ");
-        if(lenfile)
-        {
-           while(pch != NULL )
-           {
-              vec.push_back(pch);
-              pch = strtok(NULL,"\t ");
-           }
-           lenmap[vec[0]] = vec[1];     
-        }
-    } 
-    lenfile.close();
+     ifstream lenfile(chrlen_file);
+     if(!lenfile.is_open())
+     {
+        cout<<"could not open the chrlen file\n";
+        exit(1);
+     }
+
+     char chrlenline[500];
+
+     while(lenfile)
+     {  
+         lenfile.getline(chrlenline,500);
+         vector<const char* > vec;
+         char *pch;
+         pch = strtok(chrlenline,"\t ");
+         if(lenfile)
+         {
+            while(pch != NULL )
+            {
+               vec.push_back(pch);
+               pch = strtok(NULL,"\t ");
+            }
+            lenmap[vec[0]] = vec[1];     
+         }
+     } 
+     lenfile.close();
 }
 
 void convert_bedgraph_to_bigwig(string bedgraph_file, string chrlength_file, string output_file)
 {
-    string command = "./bedGraphToBigWig " + bedgraph_file  + " " + chrlength_file + " " +  output_file;
-    system(command.c_str()); 
+     string command = "./bedGraphToBigWig " + bedgraph_file  + " " + chrlength_file + " " +  output_file;
+     system(command.c_str()); 
 }
 
 void read_feature_file(char* feature_file, const char* ftype, int start)
 {   
-    ifstream infile(feature_file);
-    if(!infile.is_open())
-    {
-       cout<<"could not open the feature file\n";
-       exit(1);
-    }
+     ifstream infile(feature_file);
+     if(!infile.is_open())
+     {
+        cout<<"could not open the feature file\n";
+        exit(1);
+     }
 
-    char line[45000],rec[45000];
+     char line[45000],rec[45000];
 
-    while(infile)
-    {
-        infile.getline(line,45000); 
-        strcpy(rec,line);
-        if(infile)
-        {
-            if(rec[0] != '#')
-            {
+     while(infile)
+     {
+         infile.getline(line,45000); 
+         strcpy(rec,line);
+         if(infile)
+         {
+             if(rec[0] != '#')
+             {
                 char *pch;
                 pch = strtok(line,"\t ");
                 vector<const char* > vecc;
+
                 while(pch != NULL )
                 {
                    vecc.push_back(pch);
@@ -96,9 +99,7 @@ void read_feature_file(char* feature_file, const char* ftype, int start)
                 if(strcmp(ftype,"gene") == 0)
                 { 
                    if((strcmp(vecc[2], "gene") == 0))
-	           { 
                       chrmap.insert(std::pair<string,string>(vecc[0], vecc[start]));
-                   } 
                 } 
                 else 
                 { 
@@ -112,15 +113,16 @@ void read_feature_file(char* feature_file, const char* ftype, int start)
 
 void generate_bedgraph(const char* outputfile)
 {
-    std::multimap<string, string>::iterator itmap;
+     std::multimap<string, string>::iterator itmap;
 
-    for (std::set<string>::iterator it= chrset.begin(); it!= chrset.end(); ++it)
-    {
-         string chrnum =  *it;
-         std::pair <std::multimap<string, string>::iterator, std::multimap<string, string>::iterator> ret;
-         ret = chrmap.equal_range(chrnum);
-         for (std::multimap<string,string>::iterator ite=ret.first; ite!=ret.second; ++ite)
-         { 
+     for (std::set<string>::iterator it= chrset.begin(); it!= chrset.end(); ++it)
+     {
+          string chrnum =  *it;
+          std::pair <std::multimap<string, string>::iterator, std::multimap<string, string>::iterator> ret;
+          ret = chrmap.equal_range(chrnum);
+
+          for (std::multimap<string,string>::iterator ite=ret.first; ite!=ret.second; ++ite)
+          { 
                const char* lline = (ite->second).c_str();
 
                size_t offset = (size_t)atol((ite->second).c_str());
@@ -139,52 +141,52 @@ void generate_bedgraph(const char* outputfile)
                bin += maxval.str();
 
                IndexbinMap[bin]++;
-          }
+           }
  
-          map<string, int >::iterator end_iter = IndexbinMap.end();
+           map<string, int >::iterator end_iter = IndexbinMap.end();
           
-          string rbegin = IndexbinMap.rbegin()->first;
-          long int value = IndexbinMap.rbegin()->second;
-          char last_element[500];
-          strcpy(last_element, rbegin.c_str());
+           string rbegin = IndexbinMap.rbegin()->first;
+           long int value = IndexbinMap.rbegin()->second;
+           char last_element[500];
+           strcpy(last_element, rbegin.c_str());
           
-          IndexbinMap.erase (last_element);
+           IndexbinMap.erase (last_element);
 
-          vector<const char*> tokenmap;
-          char *token;
+           vector<const char*> tokenmap;
+           char *token;
           
-          token = strtok(last_element,"\t ");
+           token = strtok(last_element,"\t ");
        
-          while(token != NULL )
-          {
-              tokenmap.push_back(token);
-              token = strtok(NULL,"\t ");
-          }
+           while(token != NULL )
+           {
+               tokenmap.push_back(token);
+               token = strtok(NULL,"\t ");
+           }
                   
-          string min_length = tokenmap[0];
-          string contig_length = tokenmap[1];
+           string min_length = tokenmap[0];
+           string contig_length = tokenmap[1];
 
-          string key;
-          key += min_length;
-          key += "\t"; 
-          key += lenmap[chrnum];
+           string key;
+           key += min_length;
+           key += "\t"; 
+           key += lenmap[chrnum];
           
-          IndexbinMap.insert(std::pair<string, int>(key, value));
+           IndexbinMap.insert(std::pair<string, int>(key, value));
    
-          ofstream outfile(outputfile);
+           ofstream outfile(outputfile);
   
-          for(map<string, int >::iterator ii= IndexbinMap.begin(); ii!= IndexbinMap.end(); ++ii)
+           for(map<string, int >::iterator ii= IndexbinMap.begin(); ii!= IndexbinMap.end(); ++ii)
               outfile <<chrnum<<"\t"<< (*ii).first << "\t" << IndexbinMap[(*ii).first]<<endl;
-          IndexbinMap.clear(); 
+           IndexbinMap.clear(); 
 
-          outfile.close();
+           outfile.close();
      } 
 }
 
 int main(int argc, char* argv[])
 {
     if(argc != 5)
-       manual();
+        manual();
    
     read_chrlenggth(argv[1]);
     
@@ -203,8 +205,11 @@ int main(int argc, char* argv[])
     }
    
     read_feature_file(argv[2],ftype, start );
-    generate_bedgraph(argv[4]);
-    convert_bedgraph_to_bigwig(argv[4] , argv[1], string(argv[2]) + ".bw");
+    char bed_file[500];
+    strcpy(bed_file,argv[2]);
+    strcat(bed_file,".bedgraph");
+    generate_bedgraph(bed_file);
+    convert_bedgraph_to_bigwig(argv[4], argv[1], string(argv[2]) + ".bw");
 
     return 0;
 }
